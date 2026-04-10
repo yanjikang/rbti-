@@ -1,0 +1,1252 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>精神状态鉴定中心</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        :root {
+            --primary: #ff6b6b;
+            --primary-light: #ffe5e5;
+            --bg: #fafafa;
+            --card-bg: #ffffff;
+            --text: #333;
+            --text-light: #888;
+            --shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+
+        body {
+            font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* 进度条 */
+        .progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: #eee;
+            z-index: 100;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), #ff8e8e);
+            transition: width 0.3s ease;
+        }
+
+        /* 主容器 */
+        .container {
+            max-width: 480px;
+            margin: 0 auto;
+            padding: 60px 20px 40px;
+            min-height: 100vh;
+        }
+
+        /* 开始页 */
+        .start-page {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 80vh;
+            text-align: center;
+        }
+
+        .start-icon {
+            width: 120px;
+            height: 120px;
+            background: linear-gradient(135deg, var(--primary), #ff8e8e);
+            border-radius: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 60px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 40px rgba(255, 107, 107, 0.3);
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .start-title {
+            font-size: 28px;
+            font-weight: 900;
+            color: var(--text);
+            margin-bottom: 16px;
+        }
+
+        .start-desc {
+            font-size: 15px;
+            color: var(--text-light);
+            line-height: 1.8;
+            margin-bottom: 40px;
+            max-width: 300px;
+        }
+
+        .start-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 16px 60px;
+            font-size: 18px;
+            font-weight: 700;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 8px 25px rgba(255, 107, 107, 0.3);
+        }
+
+        .start-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(255, 107, 107, 0.4);
+        }
+
+        /* 问题卡片容器 */
+        .questions-wrapper {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .question-card {
+            display: none;
+            animation: slideIn 0.4s ease;
+        }
+
+        .question-card.active {
+            display: block;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes slideOut {
+            from {
+                opacity: 1;
+                transform: translateX(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateX(-30px);
+            }
+        }
+
+        .question-number {
+            font-size: 14px;
+            color: var(--primary);
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .question-text {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--text);
+            line-height: 1.5;
+            margin-bottom: 30px;
+        }
+
+        /* 多选提示 */
+        .multi-hint {
+            background: var(--primary-light);
+            color: var(--primary);
+            padding: 10px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 500;
+            display: inline-block;
+            margin-bottom: 24px;
+        }
+
+        /* 选项 */
+        .options-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .option-item {
+            background: var(--card-bg);
+            border: 2px solid #eee;
+            border-radius: 16px;
+            padding: 18px 20px;
+            font-size: 15px;
+            color: var(--text);
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+            padding-left: 50px;
+        }
+
+        .option-item:hover {
+            border-color: #ddd;
+            background: #fafafa;
+        }
+
+        .option-item.selected {
+            border-color: var(--primary);
+            background: var(--primary-light);
+        }
+
+        .option-item::before {
+            content: '';
+            position: absolute;
+            left: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 20px;
+            height: 20px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+        }
+
+        .option-item.selected::before {
+            background: var(--primary);
+            border-color: var(--primary);
+            content: '✓';
+            color: white;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* 导航按钮 */
+        .nav-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 40px;
+        }
+
+        .nav-btn {
+            flex: 1;
+            padding: 16px;
+            border: none;
+            border-radius: 14px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .nav-btn.prev {
+            background: #f0f0f0;
+            color: var(--text);
+        }
+
+        .nav-btn.next {
+            background: var(--primary);
+            color: white;
+        }
+
+        .nav-btn.next:disabled {
+            background: #ddd;
+            cursor: not-allowed;
+        }
+
+        .nav-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+        }
+
+        /* 滑动提示 */
+        .swipe-hint {
+            text-align: center;
+            margin-top: 20px;
+            color: var(--text-light);
+            font-size: 13px;
+            opacity: 0.7;
+        }
+
+        /* 结果页 */
+        .result-page {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .result-card {
+            background: var(--card-bg);
+            border-radius: 24px;
+            padding: 30px;
+            box-shadow: var(--shadow);
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .result-label {
+            font-size: 14px;
+            color: var(--text-light);
+            margin-bottom: 8px;
+        }
+
+        .result-name {
+            font-size: 26px;
+            font-weight: 900;
+            color: var(--text);
+            margin-bottom: 8px;
+        }
+
+        .result-code {
+            font-size: 16px;
+            color: var(--primary);
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+
+        .result-image {
+            width: 140px;
+            height: 140px;
+            margin: 0 auto 20px;
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.1);
+        }
+
+        .result-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .result-desc {
+            text-align: left;
+            font-size: 14px;
+            line-height: 1.8;
+            color: var(--text-light);
+            white-space: pre-line;
+        }
+
+        .result-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 16px;
+            justify-content: center;
+        }
+
+        .result-tag {
+            background: var(--primary-light);
+            color: var(--primary);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .result-rate {
+            background: linear-gradient(135deg, var(--primary), #ff8e8e);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            margin-top: 16px;
+        }
+
+        .action-btns {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .action-btn {
+            flex: 1;
+            padding: 16px;
+            border: none;
+            border-radius: 14px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .action-btn.primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .action-btn.secondary {
+            background: #f0f0f0;
+            color: var(--text);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="progress-bar" id="progressBar">
+        <div class="progress-fill" id="progressFill"></div>
+    </div>
+
+    <div class="container">
+        <!-- 开始页 -->
+        <div class="start-page" id="startPage">
+            <div class="start-icon">🧠</div>
+            <h1 class="start-title">精神状态鉴定中心</h1>
+            <p class="start-desc">36道离谱问题<br>测出你的精神状态有多离谱<br>支持多选 · 纯属恶搞</p>
+            <button class="start-btn" onclick="startTest()">开始鉴定</button>
+        </div>
+
+        <!-- 问题区域 -->
+        <div class="questions-wrapper" id="questionsWrapper"></div>
+
+        <!-- 结果页 -->
+        <div class="result-page" id="resultPage"></div>
+    </div>
+
+    <script>
+        const questions = [
+            {
+                id: 1,
+                text: "凌晨3点你突然醒来，脑子里第一个念头是？",
+                options: [
+                    "我为什么要活着",
+                    "那个尴尬的事我又想起了",
+                    "继续睡，管他呢",
+                    "打开手机刷到天亮",
+                    "算了，明天还要上班"
+                ]
+            },
+            {
+                id: 2,
+                text: "你正在开会/上课，突然想笑，你会？",
+                options: [
+                    "憋着，憋到内伤",
+                    "笑出来，反正已经社死了",
+                    "假装咳嗽，趁机笑一下",
+                    "掐自己大腿，疼痛让我冷静",
+                    "直接离场，去厕所笑完再回来"
+                ]
+            },
+            {
+                id: 3,
+                text: "领导/老师说'你到我办公室来一下'，你的反应是？",
+                options: [
+                    "完了，我要死了",
+                    "我已经在大脑里写好遗书了",
+                    "算了，死了就死了吧",
+                    "去就去，大不了辞职/退学",
+                    "先问问同事/同学最近有什么风声"
+                ]
+            },
+            {
+                id: 4,
+                text: "你的手机掉了，你第一反应是？",
+                options: [
+                    "我的命啊！！！",
+                    "终于...我可以换个新的了",
+                    "无所谓，手机而已",
+                    "算一下这个月还要花多少钱",
+                    "先发朋友圈求助"
+                ]
+            },
+            {
+                id: 5,
+                text: "你发现自己说了一句话后全场安静，你会？",
+                options: [
+                    "假装什么都没发生",
+                    "自己先笑，缓解尴尬",
+                    "继续说，把场面搞得更尴尬",
+                    "立刻道歉然后想找个地缝",
+                    "优雅离场，保持神秘"
+                ]
+            },
+            {
+                id: 6,
+                text: "你正在洗澡，突然停水了，你？",
+                options: [
+                    "尖叫，大喊，投诉",
+                    "默默站那里，和命运和解",
+                    "思考人生的意义",
+                    "用毛巾擦擦，假装洗完了",
+                    "打电话叫外卖送水"
+                ]
+            },
+            {
+                id: 7,
+                text: "你在朋友圈发了条内容，没人点赞，你会？",
+                options: [
+                    "删掉，假装没发过",
+                    "自己给自己点赞",
+                    "无所谓，发给自己看的",
+                    "分析原因：时机不对",
+                    "私信朋友让他们点赞"
+                ]
+            },
+            {
+                id: 8,
+                text: "有人对你说'你变了'，你的内心OS是？",
+                options: [
+                    "是啊，变得更废了",
+                    "你才变了，你全家都变了",
+                    "我没变，我一直都是这个鬼样",
+                    "终于有人发现了...",
+                    "变就变，关你屁事"
+                ]
+            },
+            {
+                id: 9,
+                text: "你的饭被人吃了，你会？",
+                options: [
+                    "质问全世界：谁动了我的饭",
+                    "算了，饿着吧",
+                    "思考是谁吃的，开始破案",
+                    "笑一下，然后吃别人的",
+                    "点外卖，顺便给偷吃的人也点一份"
+                ]
+            },
+            {
+                id: 10,
+                text: "深夜你突然想给前任发消息，你会？",
+                options: [
+                    "发了再说，后悔明天的事",
+                    "打了一大段然后全删了",
+                    "想发，但手机太远懒得拿",
+                    "分析分手原因，然后决定不发",
+                    "发给闺蜜/兄弟吐槽"
+                ]
+            },
+            {
+                id: 11,
+                text: "你对'明天'这个词的感觉是？",
+                options: [
+                    "明天？永远不会到来的东西",
+                    "又是要上班的一天，想死",
+                    "明天的事明天再说",
+                    "明天会更好！",
+                    "明天和今天有什么区别"
+                ]
+            },
+            {
+                id: 12,
+                text: "你的闹钟响了，但你还想睡，你对自己说什么？",
+                options: [
+                    "再睡5分钟...",
+                    "起来！你是个废人但不是废物！",
+                    "算了请假吧",
+                    "不起。谁叫都不起。",
+                    "把闹钟关了继续睡"
+                ]
+            },
+            {
+                id: 13,
+                text: "你走在路上被绊了一下，你的第一反应？",
+                options: [
+                    "看看有没有人看到",
+                    "骂地面：你凭什么绊我！",
+                    "思考：命运在暗示我什么",
+                    "起来继续走，当没发生过",
+                    "假装在系鞋带"
+                ]
+            },
+            {
+                id: 14,
+                text: "你在公共场合放了个屁，你会？",
+                options: [
+                    "假装什么都没发生",
+                    "立刻指责旁边的人",
+                    "承认，大声说'我放的'",
+                    "快速离开现场",
+                    "用更大的声音掩盖"
+                ]
+            },
+            {
+                id: 15,
+                text: "你的银行卡余额是个位数，你？",
+                options: [
+                    "正常，每天都在数着过",
+                    "打开借贷软件",
+                    "思考：钱到底是什么",
+                    "翻开钱包，还有10块",
+                    "找爸妈/朋友借"
+                ]
+            },
+            {
+                id: 16,
+                text: "你的头发越来越少了，你？",
+                options: [
+                    "已经接受了，秃头也是艺术",
+                    "买各种生发产品",
+                    "安慰自己：聪明的人头都秃",
+                    "研究植发价格，然后放弃",
+                    "直接剃光，变强"
+                ]
+            },
+            {
+                id: 17,
+                text: "你突然想哭，但不知道为什么，你会？",
+                options: [
+                    "那就哭吧，反正没人看到",
+                    "发朋友圈：今天莫名想哭",
+                    "分析自己为什么想哭",
+                    "算了，睡一觉就好了",
+                    "看悲情电影，找个理由哭"
+                ]
+            },
+            {
+                id: 18,
+                text: "你的同事/同学突然对你特别好，你的想法是？",
+                options: [
+                    "他是不是想借钱",
+                    "他是不是做了对不起我的事",
+                    "管他呢，对我好就行",
+                    "他肯定是想让我帮他干活",
+                    "我是不是快死了"
+                ]
+            },
+            {
+                id: 19,
+                text: "你发现自己说了句蠢话，你会？",
+                options: [
+                    "三年后想起来还痛苦",
+                    "马上找补，越补越蠢",
+                    "算了，蠢就蠢吧",
+                    "假装自己说的对",
+                    "自嘲一下，大家笑笑"
+                ]
+            },
+            {
+                id: 20,
+                text: "你被叫起来回答问题，但你不会，你？",
+                options: [
+                    "站起来，然后沉默",
+                    "硬答，答到哪算哪",
+                    "说我不会，然后坐下",
+                    "开始胡说八道",
+                    "装病，去医务室"
+                ]
+            },
+            {
+                id: 21,
+                text: "你的快递显示已签收，但你没收到，你？",
+                options: [
+                    "疯狂联系客服",
+                    "算了，可能真的丢了",
+                    "去快递柜找，去门卫找",
+                    "思考：快递存在的意义",
+                    "给快递员打电话骂一顿"
+                ]
+            },
+            {
+                id: 22,
+                text: "你在等车，车迟迟不来，你的内心？",
+                options: [
+                    "算命的说我今天不宜出门",
+                    "打车吧，等不起",
+                    "继续等，和站台融为一体",
+                    "默默计算还有多久",
+                    "走路去，走到哪算哪"
+                ]
+            },
+            {
+                id: 23,
+                text: "你打开外卖软件，翻了半小时不知道吃什么，最后？",
+                options: [
+                    "随便点一家",
+                    "不点了，吃泡面",
+                    "继续翻，翻到天荒地老",
+                    "发群里问别人",
+                    "去厨房看看有什么"
+                ]
+            },
+            {
+                id: 24,
+                text: "你的朋友说'随便'，你问'吃什么'，他说'都行'，你？",
+                options: [
+                    "随便选一家，难吃算他的",
+                    "继续问，问到他给出答案",
+                    "那就不吃了",
+                    "分析他到底想吃什么",
+                    "直接带他去吃最讨厌的"
+                ]
+            },
+            {
+                id: 25,
+                text: "你在电梯里遇到领导/老师，你会？",
+                options: [
+                    "假装玩手机，绝不抬头",
+                    "主动打招呼，然后无话可说",
+                    "按最近的楼层，逃跑",
+                    "沉默，看天花板",
+                    "找话题聊天气"
+                ]
+            },
+            {
+                id: 26,
+                text: "你的耳机线缠成了死结，你？",
+                options: [
+                    "花半小时解开",
+                    "算了，换一副吧",
+                    "缠着就缠着吧",
+                    "扔掉，买蓝牙耳机",
+                    "直接剪断"
+                ]
+            },
+            {
+                id: 27,
+                text: "你正在看电影，旁边的人一直在说话，你？",
+                options: [
+                    "忍着，忍着，继续忍着",
+                    "转过头说：能安静点吗",
+                    "默默换座位",
+                    "加入他，一起聊",
+                    "用眼神杀死他"
+                ]
+            },
+            {
+                id: 28,
+                text: "你的手机只剩1%的电，你？",
+                options: [
+                    "疯狂找充电器",
+                    "关机，保住最后的尊严",
+                    "让它自然死亡",
+                    "发最后一条朋友圈",
+                    "开启省电模式，撑到回家"
+                ]
+            },
+            {
+                id: 29,
+                text: "你发现自己长了一根白头发，你？",
+                options: [
+                    "拔了！一根都不能留！",
+                    "算了，留着吧",
+                    "思考：我为什么会老",
+                    "数一数还有多少根黑的",
+                    "染个颜色，假装没有"
+                ]
+            },
+            {
+                id: 30,
+                text: "你的室友/家人用了你的东西没告诉你，你？",
+                options: [
+                    "当面说：下次跟我说一声",
+                    "不说，但心里记着",
+                    "也用他的，扯平了",
+                    "算了，用就用吧",
+                    "把东西藏起来"
+                ]
+            },
+            {
+                id: 31,
+                text: "你在公司/学校门口发现自己穿错鞋了，你？",
+                options: [
+                    "管他呢，穿什么不是穿",
+                    "发朋友圈自嘲一下",
+                    "假装是时尚搭配",
+                    "回家换，迟到就迟到",
+                    "去便利店买双拖鞋"
+                ]
+            },
+            {
+                id: 32,
+                text: "你正在追剧，突然停电了，你？",
+                options: [
+                    "尖叫！正看到关键时刻！",
+                    "睡觉，明天再看",
+                    "思考：停电的意义是什么",
+                    "用流量继续看",
+                    "去外面找有电的地方"
+                ]
+            },
+            {
+                id: 33,
+                text: "你的购物车里有一堆东西，你会？",
+                options: [
+                    "一起清空，爽！",
+                    "放在那，看着就开心",
+                    "删掉，省钱了",
+                    "计算总价，看钱包答不答应",
+                    "等打折再买"
+                ]
+            },
+            {
+                id: 34,
+                text: "你发现自己被拉进一个不想进的群，你？",
+                options: [
+                    "立刻退群",
+                    "免打扰，假装不存在",
+                    "潜水，偶尔冒泡",
+                    "问为什么拉我",
+                    "在群里发广告，让他们踢我"
+                ]
+            },
+            {
+                id: 35,
+                text: "你的电脑/手机突然死机，你？",
+                options: [
+                    "疯狂点击，希望它响应",
+                    "重启，万能的重启",
+                    "拍打它，物理疗法",
+                    "等它自己好",
+                    "砸了它，买新的"
+                ]
+            },
+            {
+                id: 36,
+                text: "最后一题：做完这个测试，你想说什么？",
+                options: [
+                    "我精神状态很好！（不是）",
+                    "终于做完了，累",
+                    "快给我看结果！",
+                    "我做完了，现在可以躺了吗",
+                    "这测试是不是偷窥了我"
+                ]
+            }
+        ];
+
+        const personalityTypes = [
+            {
+                name: "朱子文型",
+                code: "ZZW",
+                image: "https://image.pollinations.ai/prompt/a%20cartoon%20philosopher%20character%20with%20glasses%2C%20thinking%20deeply%2C%20exaggerated%20expression%2C%20comic%20style%2C%20colorful?width=200&height=200&nologo=true",
+                tags: ["哲思", "社死", "摆烂", "虚无", "内耗"],
+                desc: `你是那种凌晨三点思考人生意义的人。你的大脑24小时在运转，但运转的内容都是"我为什么活着"这种没有答案的问题。
+
+你的日常：
+• 想太多，做太少
+• 计划很多，执行很少
+• 深夜emo，白天装没事
+
+精神状态：你已经达到了"清醒的颓废"境界——知道自己有问题，但不想改，因为改了就不是你了。`,
+                rate: "内耗指数：99% · 确诊为思考过度患者"
+            },
+            {
+                name: "特靠谱型",
+                code: "TKP",
+                image: "https://image.pollinations.ai/prompt/a%20cartoon%20businessman%20with%20blonde%20hair%2C%20giving%20thumbs%20up%2C%20confident%20expression%2C%20comic%20style%2C%20exaggerated%20features?width=200&height=200&nologo=true",
+                tags: ["社牛", "自信", "嘴硬", "厚脸皮", "甩锅"],
+                desc: `你是那种不管发生什么都能保持自信的人。你说的话可能前后矛盾，但你永远觉得自己是对的。
+
+你的日常：
+• 我说什么就是什么
+• 错了也是对的
+• 反正我不承认
+
+精神状态：你的自信已经超越了现实，达到了"自我催眠"的境界。`,
+                rate: "自信指数：100% · 确诊为人形自走鸡汤"
+            },
+            {
+                name: "老八型",
+                code: "LB8",
+                image: "https://image.pollinations.ai/prompt/a%20cartoon%20character%20eating%20strange%20food%2C%20exaggerated%20expression%2C%20comic%20style%2C%20humorous%20and%20bold?width=200&height=200&nologo=true",
+                tags: ["硬核", "作死", "破罐破摔", "报复", "策略"],
+                desc: `你是那种"干了兄弟们"类型的人。不管多离谱的事，你都能硬着头皮上，而且上了之后还能笑出来。
+
+你的日常：
+• 明知山有虎，偏向虎山行
+• 干了再说
+• 后悔？那是明天的事
+
+精神状态：你已经超越了正常人的羞耻心，达到了"只要我不尴尬，尴尬的就是别人"的境界。`,
+                rate: "硬核指数：100% · 确诊为社会性死亡免疫体"
+            },
+            {
+                name: "宇将军型",
+                code: "YJJ",
+                image: "https://image.pollinations.ai/prompt/a%20cartoon%20gangster%20character%20with%20sunglasses%2C%20cool%20pose%2C%20exaggerated%20swagger%2C%20comic%20style?width=200&height=200&nologo=true",
+                tags: ["暴躁", "狠人", "硬刚", "暴力", "发泄"],
+                desc: `你是那种"不服就干"的类型。你的情绪管理能力为负数，但你的行动力是满分。
+
+你的日常：
+• 能动手绝不bb
+• 火气上来了谁都拦不住
+• 事后后悔但下次还敢
+
+精神状态：你的情绪像过山车，但你自己坐得很开心。`,
+                rate: "暴躁指数：98% · 确诊为人形火药桶"
+            },
+            {
+                name: "Giao哥型",
+                code: "GG",
+                image: "https://image.pollinations.ai/prompt/a%20cartoon%20character%20with%20shaved%20head%2C%20funny%20expression%2C%20giving%20thumbs%20up%2C%20comic%20style%2C%20humorous?width=200&height=200&nologo=true",
+                tags: ["励志", "自嗨", "阿Q", "享受", "高情商"],
+                desc: `你是那种"一给我里giaogiao"的乐天派。不管多惨，你都能找到角度让自己开心起来。
+
+你的日常：
+• 虽然我穷，但我快乐
+• 虽然我丑，但我自信
+• 虽然我惨，但我能编
+
+精神状态：你的乐观已经超越了现实，达到了"精神胜利法"的最高境界。`,
+                rate: "乐观指数：100% · 确诊为人形正能量发射器"
+            },
+            {
+                name: "郭老师型",
+                code: "GLS",
+                image: "https://image.pollinations.ai/prompt/a%20cartoon%20character%20with%20exaggerated%20facial%20expressions%2C%20making%20funny%20faces%2C%20comic%20style%2C%20humorous%20and%20weird?width=200&height=200&nologo=true",
+                tags: ["社牛", "迷惑", "同化", "不要脸", "自黑"],
+                desc: `你是那种"集美们"类型的社交狂魔。你的存在感强到能照亮整个房间，而且你根本不在乎别人怎么看你。
+
+你的日常：
+• 我想干嘛就干嘛
+• 我想说什么就说什么
+• 我想吃什么就吃什么
+
+精神状态：你已经超越了正常人的羞耻心。`,
+                rate: "社牛指数：100% · 确诊为人形社交核武器"
+            },
+            {
+                name: "罗翔型",
+                code: "LX",
+                image: "https://image.pollinations.ai/prompt/a%20cartoon%20professor%20character%20with%20glasses%2C%20thoughtful%20expression%2C%20holding%20a%20book%2C%20comic%20style?width=200&height=200&nologo=true",
+                tags: ["自省", "理性", "分析", "了解", "现实"],
+                desc: `你是那种"张三"类型的理性派。不管什么事，你都能分析得头头是道，但分析完之后该干嘛还是干嘛。
+
+你的日常：
+• 我知道我不对
+• 但我就是不改
+• 因为我知道我为什么不对
+
+精神状态：你的理性已经超越了行动力，达到了"清醒的堕落"境界。`,
+                rate: "理性指数：95% · 确诊为人形分析机器"
+            },
+            {
+                name: "坤坤型",
+                code: "KK",
+                image: "https://image.pollinations.ai/prompt/a%20cartoon%20character%20playing%20basketball%2C%20dancing%20pose%2C%20confident%20expression%2C%20comic%20style%2C%20colorful?width=200&height=200&nologo=true",
+                tags: ["练习", "执着", "求生", "升级", "完美主义"],
+                desc: `你是那种"练习时长两年半"的执着派。不管做什么，你都要做到完美，哪怕没人要求你这么做。
+
+你的日常：
+• 练习，练习，还是练习
+• 我可以不完美，但我必须努力
+• 虽然努力了也不一定成功
+
+精神状态：你的执着已经超越了结果，达到了"享受过程"的境界。`,
+                rate: "执着指数：98% · 确诊为人形永动机"
+            },
+            {
+                name: "马保国型",
+                code: "MBG",
+                image: "https://image.pollinations.ai/prompt/a%20cartoon%20kung%20fu%20master%20with%20exaggerated%20poses%2C%20serious%20expression%2C%20comic%20style%2C%20humorous?width=200&height=200&nologo=true",
+                tags: ["嘴硬", "忽悠", "演技", "装死", "挽尊"],
+                desc: `你是那种"不讲武德"的嘴硬派。不管被打得多惨，你都能嘴硬说自己没输。
+
+你的日常：
+• 我没输，我只是没赢
+• 我没错，只是世界错了
+• 我没老，只是年轻人不讲武德
+
+精神状态：你的嘴硬已经超越了现实，达到了"自我欺骗"的最高境界。`,
+                rate: "嘴硬指数：100% · 确诊为人形鸭子（死鸭子嘴硬）"
+            },
+            {
+                name: "药水哥型",
+                code: "YSG",
+                image: "https://image.pollinations.ai/prompt/a%20cartoon%20character%20crying%20exaggerated%20tears%2C%20dramatic%20expression%2C%20comic%20style%2C%20humorous%20and%20sad?width=200&height=200&nologo=true",
+                tags: ["戏精", "求关注", "倾诉", "逃跑", "艺术"],
+                desc: `你是那种"妹妹加我"的戏精派。你的情绪表达夸张到能拿奥斯卡，但你是真心的。
+
+你的日常：
+• 我要让全世界知道我的悲伤
+• 我要让全世界知道我的快乐
+• 我要让全世界知道我
+
+精神状态：你的表演欲已经超越了正常范围，达到了"人生如戏，全靠演技"的境界。`,
+                rate: "戏精指数：99% · 确诊为人形奥斯卡奖杯"
+            },
+            {
+                name: "孙笑川型",
+                code: "SXC",
+                image: "https://image.pollinations.ai/prompt/a%20cartoon%20character%20with%20angry%20expression%2C%20pointing%20finger%2C%20comic%20style%2C%20exaggerated%20features?width=200&height=200&nologo=true",
+                tags: ["暴躁", "记仇", "报复", "质问", "暗杀"],
+                desc: `你是那种"你吼那么大声干嘛"的暴躁派。你的脾气一点就着，而且记仇能记一辈子。
+
+你的日常：
+• 谁惹我我骂谁
+• 我不爽谁都别爽
+• 有仇必报，没仇也报
+
+精神状态：你的暴躁已经超越了正常范围。`,
+                rate: "暴躁指数：99% · 确诊为人形火药桶"
+            },
+            {
+                name: "王境泽型",
+                code: "WJZ",
+                image: "https://image.pollinations.ai/prompt/a%20cartoon%20character%20eating%20rice%20with%20exaggerated%20expression%2C%20comic%20style%2C%20humorous%20and%20embarrassed?width=200&height=200&nologo=true",
+                tags: ["真香", "打脸", "放弃", "赌气", "随便"],
+                desc: `你是那种"我就是饿死也不吃"的真香派。你的flag立得飞起，倒得更快。
+
+你的日常：
+• 我再也不...（下一秒就破戒）
+• 我绝对...（绝对做不到）
+• 我不可能...（真香）
+
+精神状态：你的打脸速度已经超越了光速，达到了"瞬间真香"的境界。`,
+                rate: "打脸指数：100% · 确诊为人形flag收割机"
+            },
+            {
+                name: "窃格瓦拉型",
+                code: "QGWL",
+                image: "https://image.pollinations.ai/prompt/a%20cartoon%20character%20with%20messy%20hair%2C%20lazy%20expression%2C%20lying%20down%2C%20comic%20style%2C%20humorous?width=200&height=200&nologo=true",
+                tags: ["摆烂", "佛系", "懒癌", "打工", "循环"],
+                desc: `你是那种"打工是不可能打工的"摆烂派。你的理想是不劳而获，但你也知道不可能。
+
+你的日常：
+• 明天再说
+• 下次一定
+• 算了，不干了
+
+精神状态：你的摆烂已经超越了正常范围，达到了"躺平即正义"的境界。`,
+                rate: "摆烂指数：100% · 确诊为人形咸鱼"
+            },
+            {
+                name: "面筋哥型",
+                code: "MJG",
+                image: "https://image.pollinations.ai/prompt/a%20cartoon%20character%20singing%20with%20exaggerated%20expression%2C%20holding%20food%2C%20comic%20style%2C%20humorous?width=200&height=200&nologo=true",
+                tags: ["乐观", "享受", "豁达", "通透", "艺术"],
+                desc: `你是那种"香香的口味"的乐天派。不管多惨，你都能找到自己的快乐。
+
+你的日常：
+• 虽然穷，但我有音乐
+• 虽然丑，但我有才华
+• 虽然惨，但我有梦想
+
+精神状态：你的乐观已经超越了现实，达到了"苦中作乐"的最高境界。`,
+                rate: "乐观指数：99% · 确诊为人形小太阳"
+            },
+            {
+                name: "巨魔型",
+                code: "JM",
+                image: "https://image.pollinations.ai/prompt/a%20cartoon%20troll%20character%20with%20big%20smile%2C%20thumbs%20up%2C%20exaggerated%20positive%20expression%2C%20comic%20style?width=200&height=200&nologo=true",
+                tags: ["励志", "硬撑", "欺骗", "装死", "体面"],
+                desc: `你是那种"我们遇到什么困难也不要怕"的励志派。不管多难，你都能给自己打气。
+
+你的日常：
+• 微笑面对危险
+• 消除恐惧的最好办法就是面对恐惧
+• 坚持，才是胜利
+
+精神状态：你的励志已经超越了现实，达到了"自我洗脑"的最高境界。`,
+                rate: "励志指数：100% · 确诊为人形鸡汤"
+            },
+            {
+                name: "韩美娟型",
+                code: "HMJ",
+                image: "https://image.pollinations.ai/prompt/a%20cartoon%20character%20with%20heavy%20makeup%2C%20dramatic%20expression%2C%20comic%20style%2C%20exaggerated%20and%20colorful?width=200&height=200&nologo=true",
+                tags: ["百因必有果", "报应", "迷惑", "策略", "诡异"],
+                desc: `你是那种"百因必有果"的因果派。你相信世间万物都有报应，而且你喜欢看报应发生。
+
+你的日常：
+• 你的报应就是我
+• 记得双击么么哒
+• 你不给我点赞，我就诅咒你
+
+精神状态：你的因果观已经超越了正常范围，达到了"玄学+威胁"的境界。`,
+                rate: "诡异指数：98% · 确诊为人形因果律武器"
+            }
+        ];
+
+        let currentQuestion = 0;
+        let answers = {};
+
+        function startTest() {
+            document.getElementById('startPage').classList.add('hidden');
+            renderQuestions();
+        }
+
+        function renderQuestions() {
+            const wrapper = document.getElementById('questionsWrapper');
+            wrapper.innerHTML = '';
+            
+            questions.forEach((q, idx) => {
+                const card = document.createElement('div');
+                card.className = `question-card ${idx === currentQuestion ? 'active' : ''}`;
+                card.id = `question-${idx}`;
+                
+                card.innerHTML = `
+                    <div class="question-number">第 ${idx + 1} / ${questions.length} 题</div>
+                    <div class="question-text">${q.text}</div>
+                    <div class="multi-hint">💡 可多选</div>
+                    <div class="options-list">
+                        ${q.options.map((opt, optIdx) => `
+                            <div class="option-item" onclick="selectOption(${idx}, ${optIdx}, this)">
+                                ${opt}
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div class="nav-buttons">
+                        <button class="nav-btn prev" onclick="prevQuestion()" ${idx === 0 ? 'style="visibility:hidden"' : ''}>上一题</button>
+                        <button class="nav-btn next" onclick="nextQuestion()" ${idx === questions.length - 1 ? '' : ''} id="nextBtn-${idx}">${idx === questions.length - 1 ? '查看结果' : '下一题'}</button>
+                    </div>
+                    <div class="swipe-hint">← 左右滑动切换 →</div>
+                `;
+                
+                wrapper.appendChild(card);
+            });
+            
+            updateProgress();
+        }
+
+        function selectOption(questionIdx, optionIdx, element) {
+            if (!answers[questionIdx]) answers[questionIdx] = [];
+            
+            const idx = answers[questionIdx].indexOf(optionIdx);
+            if (idx > -1) {
+                answers[questionIdx].splice(idx, 1);
+                element.classList.remove('selected');
+            } else {
+                answers[questionIdx].push(optionIdx);
+                element.classList.add('selected');
+            }
+            
+            // 更新按钮状态
+            const nextBtn = document.getElementById(`nextBtn-${questionIdx}`);
+            if (nextBtn) {
+                nextBtn.disabled = answers[questionIdx].length === 0;
+            }
+        }
+
+        function nextQuestion() {
+            if (!answers[currentQuestion] || answers[currentQuestion].length === 0) {
+                alert('请至少选择一个选项');
+                return;
+            }
+            
+            if (currentQuestion < questions.length - 1) {
+                document.getElementById(`question-${currentQuestion}`).classList.remove('active');
+                currentQuestion++;
+                document.getElementById(`question-${currentQuestion}`).classList.add('active');
+                updateProgress();
+                window.scrollTo(0, 0);
+            } else {
+                showResult();
+            }
+        }
+
+        function prevQuestion() {
+            if (currentQuestion > 0) {
+                document.getElementById(`question-${currentQuestion}`).classList.remove('active');
+                currentQuestion--;
+                document.getElementById(`question-${currentQuestion}`).classList.add('active');
+                updateProgress();
+                window.scrollTo(0, 0);
+            }
+        }
+
+        function updateProgress() {
+            const progress = ((currentQuestion + 1) / questions.length) * 100;
+            document.getElementById('progressFill').style.width = progress + '%';
+        }
+
+        function showResult() {
+            document.getElementById('questionsWrapper').classList.add('hidden');
+            document.getElementById('progressBar').classList.add('hidden');
+            
+            // 计算结果
+            const tagCount = {};
+            Object.values(answers).forEach(opts => {
+                opts.forEach(optIdx => {
+                    // 简单的标签映射
+                    const tags = ['哲思', '社死', '摆烂', '社牛', '硬核', '暴躁', '乐观', '嘴硬', '戏精', '真香', '励志', '自信'];
+                    const tag = tags[optIdx % tags.length];
+                    tagCount[tag] = (tagCount[tag] || 0) + 1;
+                });
+            });
+            
+            let bestMatch = personalityTypes[0];
+            let maxScore = 0;
+            
+            personalityTypes.forEach(type => {
+                let score = 0;
+                type.tags.forEach(tag => {
+                    if (tagCount[tag]) score += tagCount[tag];
+                });
+                if (score > maxScore) {
+                    maxScore = score;
+                    bestMatch = type;
+                }
+            });
+            
+            if (maxScore === 0) {
+                bestMatch = personalityTypes[Math.floor(Math.random() * personalityTypes.length)];
+            }
+            
+            const resultPage = document.getElementById('resultPage');
+            resultPage.classList.remove('hidden');
+            resultPage.innerHTML = `
+                <div class="result-card">
+                    <div class="result-label">你的精神状态是</div>
+                    <div class="result-name">${bestMatch.name}</div>
+                    <div class="result-code">${bestMatch.code}</div>
+                    <div class="result-image">
+                        <img src="${bestMatch.image}" alt="${bestMatch.name}" onerror="this.src='https://api.dicebear.com/7.x/avataaars/svg?seed=${bestMatch.code}'">
+                    </div>
+                    <div class="result-desc">${bestMatch.desc}</div>
+                    <div class="result-tags">
+                        ${bestMatch.tags.map(tag => `<span class="result-tag">${tag}</span>`).join('')}
+                    </div>
+                    <div class="result-rate">${bestMatch.rate}</div>
+                </div>
+                <div class="action-btns">
+                    <button class="action-btn primary" onclick="location.reload()">再测一次</button>
+                    <button class="action-btn secondary" onclick="downloadResult()">保存结果</button>
+                </div>
+            `;
+            
+            window.scrollTo(0, 0);
+        }
+
+        function downloadResult() {
+            alert('请使用手机截图功能保存结果');
+        }
+
+        
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        document.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+        });
+
+        document.addEventListener('touchend', e => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        });
+
+        function handleSwipe() {
+            const diff = touchStartX - touchEndX;
+            if (Math.abs(diff) > 50) {
+                if (diff > 0) {
+                    
+                    if (answers[currentQuestion] && answers[currentQuestion].length > 0) {
+                        nextQuestion();
+                    }
+                } else {
+                    
+                    prevQuestion();
+                }
+            }
+        }
+    </script>
+</body>
+</html>
